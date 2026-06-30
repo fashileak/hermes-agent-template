@@ -85,5 +85,22 @@ ENV HERMES_TUI_DIR=/opt/hermes-agent/ui-tui
 # tini wraps start.sh so it runs as PID 1's child instead of as PID 1 itself.
 # `-g` propagates signals to the whole process group so `docker stop` /
 # Railway's SIGTERM cleanly terminates the entire tree, not just start.sh.
+
+# ---- gbrain CLI: bun runtime + gbrain pinned @814258d (v0.42.53.0) ----
+# Baked under /opt so the runtime /data volume mount does NOT hide it (the
+# same reason Playwright + the TUI bundle live under /opt). gbrain's config,
+# brain repo, and Postgres data stay on the persistent /data volume.
+# Deterministic clone+pin+shim install (avoids the global-install postinstall
+# hook issue garrytan/gbrain#218). Bump the commit to upgrade gbrain.
+ENV BUN_INSTALL=/opt/bun
+ENV PATH=/opt/bun/bin:$PATH
+RUN curl -fsSL https://bun.sh/install | bash && \
+    git clone https://github.com/garrytan/gbrain.git /opt/gbrain && \
+    cd /opt/gbrain && git checkout 814258d && \
+    /opt/bun/bin/bun install --frozen-lockfile && \
+    printf '#!/bin/bash\nexec /opt/bun/bin/bun run /opt/gbrain/src/cli.ts "$@"\n' > /usr/local/bin/gbrain && \
+    chmod 0755 /usr/local/bin/gbrain && \
+    gbrain --version
+
 ENTRYPOINT ["/usr/bin/tini", "-g", "--"]
 CMD ["/app/start.sh"]
