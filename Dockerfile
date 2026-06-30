@@ -94,7 +94,8 @@ ENV HERMES_TUI_DIR=/opt/hermes-agent/ui-tui
 # hook issue garrytan/gbrain#218). Bump the commit to upgrade gbrain.
 ENV BUN_INSTALL=/opt/bun
 ENV PATH=/opt/bun/bin:$PATH
-RUN curl -fsSL https://bun.sh/install | bash && \
+RUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/* && \
+    curl -fsSL https://bun.sh/install | bash && \
     git clone https://github.com/garrytan/gbrain.git /opt/gbrain && \
     cd /opt/gbrain && git checkout 814258d && \
     /opt/bun/bin/bun install --frozen-lockfile && \
